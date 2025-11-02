@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Firebase Control Panel</title>
+    <style>
+        :root {
+            --primary: #1a2a6c;
+            --secondary: #b21f1f;
+            --accent: #fdbb2d;
+            --success: #4cd964;
+            --warning: #ff9500;
+            --danger: #ff3b30;
+            --info: #007aff;
+            --dark: #0f1418;
+            --light: #e6eef8;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-border: rgba(255, 255, 255, 0.15);
+            --header-bg: rgba(0, 0, 0, 0.4);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--primary), var(--secondary), var(--accent));
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            color: var(--light);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: var(--header-bg);
+            border-radius: 20px;
+            width: 100%;
+            max-width: 1200px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            background: linear-gradient(to right, var(--light), var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+            margin-top: 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin: 20px 0;
+            gap: 10px;
+        }
+
+        .tab {
+            padding: 12px 30px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-weight: 600;
+            border: 1px solid transparent;
+        }
+
+        .tab.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: var(--accent);
+            box-shadow: 0 0 15px rgba(253, 187, 45, 0.3);
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+            width: 100%;
+            max-width: 1200px;
+        }
+
+        .tab-content {
+            display: none;
+            width: 100%;
+        }
+
+        .tab-content.active {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 30px;
+        }
+
+        .panel {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            width: 100%;
+            max-width: 480px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--card-border);
+        }
+
+        .panel-title {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            text-align: center;
+            color: var(--accent);
+        }
+
+        .deposit-display {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            text-align: center;
+            min-height: 140px;
+        }
+
+        .deposit-value {
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: var(--success);
+        }
+
+        .button-group {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        button {
+            padding: 14px 25px;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .add-btn {
+            background: linear-gradient(to right, var(--success), #5ac8fa);
+            color: white;
+        }
+
+        .remove-btn {
+            background: linear-gradient(to right, var(--danger), var(--warning));
+            color: white;
+        }
+
+        .update-btn {
+            background: linear-gradient(to right, var(--info), #5856d6);
+            color: white;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 25px;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            border-radius: 10px;
+            transform: translateX(150%);
+            transition: transform 0.4s ease;
+            z-index: 1000;
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.show {
+            transform: translateX(0);
+        }
+
+        .notification.error {
+            border-left-color: var(--danger);
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Firebase Control Panel</h1>
+        <p class="subtitle">Manage deposits and settings in real-time</p>
+
+        <div class="tabs">
+            <div class="tab active" data-tab="deposit">Deposit Control</div>
+            <div class="tab" data-tab="settings">Settings</div>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="tab-content active" id="deposit-tab">
+            <div class="panel">
+                <h2 class="panel-title">LZR Deposit</h2>
+                <div class="deposit-display" id="lzrDeposit">
+                    <p class="status">Status: <span id="lzrStatus">Loading...</span></p>
+                    <div class="deposit-value" id="lzrValue">-</div>
+                </div>
+                <div class="button-group">
+                    <button class="add-btn" id="lzrAddBtn">LZR ACTIVE</button>
+                    <button class="remove-btn" id="lzrRemoveBtn">REMOVE LZR</button>
+                </div>
+            </div>
+
+            <div class="panel">
+                <h2 class="panel-title">Deposit Amount</h2>
+                <div class="deposit-display" id="amountDeposit">
+                    <p class="status">Status: <span id="amountStatus">Loading...</span></p>
+                    <div class="deposit-value" id="amountValue">-</div>
+                </div>
+                <div class="button-group">
+                    <button class="add-btn" id="amountAddBtn">ADD AMOUNT</button>
+                    <button class="update-btn" id="amountUpdateBtn">UPDATE AMOUNT</button>
+                    <button class="remove-btn" id="amountRemoveBtn">REMOVE AMOUNT</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="tab-content" id="settings-tab">
+            <div class="panel">
+                <h2 class="panel-title">Application Settings</h2>
+                <div class="settings-form">
+                    <div class="form-group">
+                        <label for="dbRoot">Firebase DB Root URL</label>
+                        <input id="dbRoot" type="text" value="https://sammer-project-8dbd0-default-rtdb.firebaseio.com/" />
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="notification" id="notification">Operation completed successfully!</div>
+
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+    <script>
+        // ===== Firebase Config =====
+        const firebaseConfig = {
+            databaseURL: "https://sammer-project-8dbd0-default-rtdb.firebaseio.com"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // ===== Refs =====
+        const lzrRef = database.ref("deposit/deposit/xl");
+        const amountRef = database.ref("deposit/deposit/amt");
+
+        // ===== LZR Deposit =====
+        const lzrStatus = document.getElementById('lzrStatus');
+        const lzrValue = document.getElementById('lzrValue');
+
+        lzrRef.on('value', snapshot => {
+            if (snapshot.exists()) {
+                lzrStatus.textContent = 'Active';
+                lzrValue.textContent = snapshot.val();
+            } else {
+                lzrStatus.textContent = 'Inactive';
+                lzrValue.textContent = '-';
+            }
+        });
+
+        document.getElementById('lzrAddBtn').onclick = () => lzrRef.set("100");
+        document.getElementById('lzrRemoveBtn').onclick = () => lzrRef.remove();
+
+        // ===== Amount Deposit =====
+        const amountStatus = document.getElementById('amountStatus');
+        const amountValue = document.getElementById('amountValue');
+
+        amountRef.on('value', snapshot => {
+            if (snapshot.exists()) {
+                amountStatus.textContent = 'Active';
+                amountValue.textContent = snapshot.val();
+            } else {
+                amountStatus.textContent = 'Inactive';
+                amountValue.textContent = '-';
+            }
+        });
+
+        document.getElementById('amountAddBtn').onclick = () => {
+            const val = prompt("Enter deposit amount:");
+            if (val) amountRef.set(val);
+        };
+        document.getElementById('amountUpdateBtn').onclick = () => {
+            const val = prompt("Enter new deposit amount:");
+            if (val) amountRef.set(val);
+        };
+        document.getElementById('amountRemoveBtn').onclick = () => amountRef.remove();
+    </script>
+</body>
+</html>
